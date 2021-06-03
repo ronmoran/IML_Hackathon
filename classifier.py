@@ -29,7 +29,7 @@ def train_pre_process(X: pd.DataFrame):
 
 
 def train(x: pd.DataFrame, y:pd.DataFrame) -> RandomForestClassifier:
-    clf = RandomForestClassifier(n_estimators=100, max_depth=20, random_state=0)
+    clf = RandomForestClassifier(n_estimators=100, max_depth=10, max_features=0.75, random_state=0)
     clf.fit(x, y)
     return clf
 
