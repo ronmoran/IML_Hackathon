@@ -66,7 +66,7 @@ def get_indices_of_catches(location, crimes):
     times = crimes[:,2]
 
     distances = np.sqrt(((Xs - location[0]) ** 2) + ((Ys - location[1]) ** 2))
-    close_distances_indexes = np.where(distances <= 500)
+    close_distances_indexes = np.where(distances <= MAX_DISTANCE)
     close_times_indexes = np.where((times >= location[2] - BEFORE_AND_AFTER) & (times <= location[2] + BEFORE_AND_AFTER))
 
     return np.intersect1d(close_distances_indexes, close_times_indexes)
@@ -118,12 +118,12 @@ def get_cars_locations(crimes, num_of_days=0):
     cars_places_and_times = np.empty([0, 3])
 
     for police_car_index in range(POLICE_CARS):
-        print("CUR POLICE")
-        print(crimes.shape)
         cur_pick = pick_best_location(possible_locations, crimes)
         cur_pick = fix_time(cur_pick)
         cars_places_and_times = np.vstack([cars_places_and_times, cur_pick])
         crimes = remove_close_crimes(crimes, cur_pick, num_of_days)
+        print("CUR PICK:")
+        print(cur_pick)
         print(f"FOUND LOCATION {police_car_index}")
 
     return cars_places_and_times
@@ -194,29 +194,32 @@ def get_test_data(size):
 if __name__ == '__main__':
     path = "locations.npy"
     date = get_random_date()
-    # date = datetime.datetime.strptime('06052021', '%d%m%Y').date()
 
     # crimes = get_all_train_data_of_weekday(date)
     crimes = get_all_train_data()
 
     verify_legal_time_intervals()
     locations = get_cars_locations(crimes)
-    np.save(path, locations)
 
-    locations = np.load(path)
+    # np.save(path, locations)
+    # locations = np.load(path)
 
     # plot_crimes_and_locations(crimes, locations)
 
 
     # validation_crimes = get_data_of_one_date(date)
-    validation_crimes = get_test_data(400)
+    # validation_crimes = get_test_data(400)
+    validation_crimes = get_all_train_data()
     print(validation_crimes)
     print(len(validation_crimes))
 
-    catches = np.array([])
+    catches = []
     for location in locations:
+        print(any((location == x).all() for x in validation_crimes))
+        print(location)
         cur_catches = get_indices_of_catches(location, validation_crimes)
-        catches = np.union1d(catches, cur_catches)
+        # print(cur_catches)
+        # catches.append(cur_catches)
 
-    catches = np.unique(catches)
-    print(catches)
+    # catches = np.unique(catches)
+    # print(catches)
