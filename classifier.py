@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pickle
 from sklearn.ensemble import RandomForestClassifier
+from catboost import CatBoostClassifier
 
 crimes_dict = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRACTICE', 4: 'ASSAULT'}
 crimes_inv_dict = {v: k for k, v in crimes_dict.items()}  # todo return crimes and not label
@@ -21,6 +22,9 @@ def pre_processing(X: pd.DataFrame):
     processed_data['Date'] = pd.to_datetime(processed_data['Date'], format='%m/%d/%Y %I:%M:%S %p')
     processed_data['Updated On'] = pd.to_datetime(processed_data['Updated On'], format='%m/%d/%Y %I:%M:%S %p')
     processed_data['Time diff'] = processed_data['Updated On'] - processed_data['Date']
+    # processed_data[LOCATION_DESCRIPTION_COL] = processed_data[
+    #     LOCATION_DESCRIPTION_COL].apply(lambda x: LOCATION_DESCRIPTION.get(
+    #     x, -1))  # todo why -1? what to do with newly found data
     processed_data['Time diff'] = processed_data['Time diff'].apply(lambda x: x.total_seconds())
     processed_data['Hour'] = processed_data['Date'].apply(lambda x: x.time().hour)
     processed_data['Weekday'] = processed_data['Date'].apply(lambda x: x.date().weekday())
@@ -71,10 +75,11 @@ def train_pre_process(X: pd.DataFrame):
     return pre_processing(processed_data), y_train
 
 
-def train(x: pd.DataFrame, y:pd.DataFrame, depth=10) -> RandomForestClassifier:
-    clf = RandomForestClassifier(n_estimators=200, max_depth=depth,
-                                 max_features=0.75,
-                                 random_state=0)
+def train(x: pd.DataFrame, y: pd.DataFrame):
+    clf = CatBoostClassifier(iterations=400, depth=4,
+                             cat_features=['Weekday', 'Hour', "Beat", 'District', 'Community Area'],
+                             text_features=[LOCATION_DESCRIPTION_COL])
+    # clf = RandomForestClassifier(n_estimators=150, max_depth=11, max_features='auto', ccp_alpha=0.0001)
     clf.fit(x, y)
     return clf
 
@@ -89,7 +94,7 @@ def load_model(path) -> RandomForestClassifier:
         return pickle.load(f)
 
 
-def predict(X, rf: RandomForestClassifier): #todo change back to X only
+def predict(X, rf: RandomForestClassifier):  # todo change back to X only
     return rf.predict(pre_processing(X))
 
 
