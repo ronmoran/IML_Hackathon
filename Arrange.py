@@ -1,6 +1,6 @@
 import numpy as np
 import datetime
-from pandas as pd
+import pandas as pd
 # from datetime import datetime
 # from math import sin, cos, pi
 #
@@ -62,6 +62,10 @@ def all_crimes(data):
 
 def crimes_by_weekday(data, date):
     time_to_minute(data)
-    data["Datetime"]
+    data["Datetime"] = data[date["Datetime"].weekday() == date.weekday()]
 
+
+def crimes_by_monthday(data, date):
+    time_to_minute(data)
+    data["Datetime"] = data[date["Datetime"].day == date.day]
 
