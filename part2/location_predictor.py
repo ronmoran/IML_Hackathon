@@ -2,6 +2,8 @@ import numpy as np
 import math
 import pandas as pd
 from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+import datetime
 
 # The maximum distance from police to crime
 MAX_DISTANCE = 500
@@ -20,7 +22,7 @@ BEFORE_AND_AFTER = 30
 
 
 def get_possible_locations(crimes):
-    # kmeans = KMeans(n_clusters=1000, random_state=0).fit(crimes)
+    # kmeans = KMeans(n_clusters=3000, random_state=0).fit(crimes)
     # centers = kmeans.cluster_centers_
     # print(centers.shape)
     return crimes
@@ -48,6 +50,11 @@ def get_catches_of_location(possible_location, crimes):
     # for crime in crimes:
     #     if is_location_catch_crime(possible_location, crime):
     #         catches += 1
+    #
+    # if (len(get_indices_of_catches(possible_location, crimes)) != catches):
+    #     print("SHITTT")
+    # else:
+    #     print("GOOD")
 
 
     return len(get_indices_of_catches(possible_location, crimes))
@@ -63,6 +70,7 @@ def get_indices_of_catches(location, crimes):
     close_times_indexes = np.where((times >= location[2] - BEFORE_AND_AFTER) & (times <= location[2] + BEFORE_AND_AFTER))
 
     return np.intersect1d(close_distances_indexes, close_times_indexes)
+    # return close_distances_indexes
 
 
 def pick_best_location(possible_locations, crimes):
@@ -75,6 +83,8 @@ def pick_best_location(possible_locations, crimes):
         if cur_catch_crimes >= max_catch_crimes:
             max_catch_crimes = cur_catch_crimes
             best_location = cur_possible_location
+
+    print(f"best location time: {best_location[2] / 60} : {best_location[2] % 60}")
 
     print("MATCH LOCATIONS")
     print(max_catch_crimes)
@@ -127,7 +137,7 @@ def get_all_train_data():
     data = pd.read_csv('../train_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
     data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
-    return data[['X Coordinate', 'Y Coordinate', 'Datetime']].to_numpy()
+    return data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
 
 def get_all_train_data_of_weekday(date):
     data = pd.read_csv('../train_dataset_crimes.csv')
@@ -155,20 +165,52 @@ def get_random_date():
 
     return random_date
 
+
+def plot_crimes_and_locations(crimes, locations):
+    crimes = crimes[:,:2]
+    locations = locations[:,:2]
+    plt.xlabel('X', fontsize=12)
+    plt.ylabel('Y', fontsize=12)
+    plt.scatter(crimes[:,0], crimes[:,1])
+    plt.scatter(locations[:,0], locations[:,1])
+    plt.show()
+
+
+def print_crimes_times(param):
+    plt.hist(param/60, 24)
+    plt.show()
+
+
+def get_test_data(size):
+    data = pd.read_csv('../test_dataset_crimes.csv')
+    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
+    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
+    data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
+    data = data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
+    np.random.shuffle(data)
+    return data[:size,:]
+
+
 if __name__ == '__main__':
     path = "locations.npy"
     date = get_random_date()
+    # date = datetime.datetime.strptime('06052021', '%d%m%Y').date()
 
     # crimes = get_all_train_data_of_weekday(date)
     crimes = get_all_train_data()
+
     verify_legal_time_intervals()
     locations = get_cars_locations(crimes)
     np.save(path, locations)
 
     locations = np.load(path)
 
+    # plot_crimes_and_locations(crimes, locations)
 
-    validation_crimes = get_data_of_one_date(date)
+
+    # validation_crimes = get_data_of_one_date(date)
+    validation_crimes = get_test_data(400)
+    print(validation_crimes)
     print(len(validation_crimes))
 
     catches = np.array([])
@@ -178,15 +220,3 @@ if __name__ == '__main__':
 
     catches = np.unique(catches)
     print(catches)
-
-
-    #
-    # x = np.array([1,2,3])
-    # y = np.array([10,2,55])
-    # z1 = np.where(x>2)
-    # z2 = np.where(y>=10)
-    #
-    # print(z1)
-    # print(z2)
-    #
-    # print(np.intersect1d(z1,z2))
