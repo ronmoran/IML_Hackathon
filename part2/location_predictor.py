@@ -1,12 +1,11 @@
-import numpy as np
 import math
-import pandas as pd
-from sklearn.cluster import KMeans
+
 import matplotlib.pyplot as plt
-import datetime
+import numpy as np
+import pandas as pd
 
 # The maximum distance from police to crime
-MAX_DISTANCE = 500
+MAX_DISTANCE = 500 * 3.28084
 
 # NUMBER OF MINUTES BETWEEN EACH TRY
 # (60 * 24) % TIME_INTERVALS should be 0
@@ -22,9 +21,6 @@ BEFORE_AND_AFTER = 30
 
 
 def get_possible_locations(crimes):
-    # kmeans = KMeans(n_clusters=3000, random_state=0).fit(crimes)
-    # centers = kmeans.cluster_centers_
-    # print(centers.shape)
     return crimes
 
 
@@ -56,18 +52,18 @@ def get_catches_of_location(possible_location, crimes):
     # else:
     #     print("GOOD")
 
-
     return len(get_indices_of_catches(possible_location, crimes))
 
 
 def get_indices_of_catches(location, crimes):
-    Xs = crimes[:,0]
-    Ys = crimes[:,1]
-    times = crimes[:,2]
+    Xs = crimes[:, 0]
+    Ys = crimes[:, 1]
+    times = crimes[:, 2]
 
     distances = np.sqrt(((Xs - location[0]) ** 2) + ((Ys - location[1]) ** 2))
     close_distances_indexes = np.where(distances <= MAX_DISTANCE)
-    close_times_indexes = np.where((times >= location[2] - BEFORE_AND_AFTER) & (times <= location[2] + BEFORE_AND_AFTER))
+    close_times_indexes = np.where(
+        (times >= location[2] - BEFORE_AND_AFTER) & (times <= location[2] + BEFORE_AND_AFTER))
 
     return np.intersect1d(close_distances_indexes, close_times_indexes)
     # return close_distances_indexes
@@ -139,6 +135,7 @@ def get_all_train_data():
     data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
     return data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
 
+
 def get_all_train_data_of_weekday(date):
     data = pd.read_csv('../train_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
@@ -158,6 +155,7 @@ def get_data_of_one_date(random_date):
     data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
     return data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
 
+
 def get_random_date():
     data = pd.read_csv('../validation_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
@@ -167,17 +165,17 @@ def get_random_date():
 
 
 def plot_crimes_and_locations(crimes, locations):
-    crimes = crimes[:,:2]
-    locations = locations[:,:2]
+    crimes = crimes[:, :2]
+    locations = locations[:, :2]
     plt.xlabel('X', fontsize=12)
     plt.ylabel('Y', fontsize=12)
-    plt.scatter(crimes[:,0], crimes[:,1])
-    plt.scatter(locations[:,0], locations[:,1])
+    plt.scatter(crimes[:, 0], crimes[:, 1])
+    plt.scatter(locations[:, 0], locations[:, 1])
     plt.show()
 
 
 def print_crimes_times(param):
-    plt.hist(param/60, 24)
+    plt.hist(param / 60, 24)
     plt.show()
 
 
@@ -188,8 +186,15 @@ def get_test_data(size):
     data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
     data = data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
     np.random.shuffle(data)
-    return data[:size,:]
+    return data[:size, :]
 
+
+def send_police_cars(date):
+    crimes = get_all_train_data()
+    verify_legal_time_intervals()
+    locations = get_cars_locations(crimes)
+
+    # TODO return proper date in the seconds column
 
 if __name__ == '__main__':
     path = "locations.npy"
@@ -201,25 +206,24 @@ if __name__ == '__main__':
     verify_legal_time_intervals()
     locations = get_cars_locations(crimes)
 
-    # np.save(path, locations)
-    # locations = np.load(path)
-
     # plot_crimes_and_locations(crimes, locations)
-
 
     # validation_crimes = get_data_of_one_date(date)
     # validation_crimes = get_test_data(400)
-    validation_crimes = get_all_train_data()
+    validation_crimes = get_test_data(400)
     print(validation_crimes)
     print(len(validation_crimes))
 
     catches = []
     for location in locations:
         print(any((location == x).all() for x in validation_crimes))
+        print("LOCATION:")
         print(location)
         cur_catches = get_indices_of_catches(location, validation_crimes)
-        # print(cur_catches)
-        # catches.append(cur_catches)
+        print("CATCHES:")
+        print(cur_catches)
+        catches.append(cur_catches)
 
     # catches = np.unique(catches)
-    # print(catches)
+    print("ALL CATCHES:")
+    print(catches)
