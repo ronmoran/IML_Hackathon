@@ -49,10 +49,11 @@ from pandas as pd
 
 def arrange():
     data = pd.read_csv('test_dataset_crimes.csv')
+    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%y %I:%M:%S %p')
     return data['Latitude', 'Longitude', 'Datetime']
 
 def time_to_minute(data):
-    data['Datetime'] = data['datetime'].hour * 60 + data['datetime'].minute
+    data['Datetime'] = data['Datetime'].hour * 60 + data['Datetime'].minute
     return data
 
 def all_crimes(data):
@@ -61,5 +62,6 @@ def all_crimes(data):
 
 def crimes_by_weekday(data, date):
     time_to_minute(data)
-    d
+    data["Datetime"]
+
 
