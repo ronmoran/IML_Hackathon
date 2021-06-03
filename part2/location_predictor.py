@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import pandas as pd
+from sklearn.cluster import KMeans
 
 # The maximum distance from police to crime
 MAX_DISTANCE = 500
@@ -18,6 +20,9 @@ BEFORE_AND_AFTER = 30
 
 
 def get_possible_locations(crimes):
+    # kmeans = KMeans(n_clusters=1000, random_state=0).fit(crimes)
+    # centers = kmeans.cluster_centers_
+    # print(centers.shape)
     return crimes
 
 
@@ -39,12 +44,25 @@ def is_location_catch_crime(possible_location, crime):
 
 
 def get_catches_of_location(possible_location, crimes):
-    catches = 0
-    for crime in crimes:
-        if is_location_catch_crime(possible_location, crime):
-            catches += 1
+    # catches = 0
+    # for crime in crimes:
+    #     if is_location_catch_crime(possible_location, crime):
+    #         catches += 1
 
-    return catches
+
+    return len(get_indices_of_catches(possible_location, crimes))
+
+
+def get_indices_of_catches(location, crimes):
+    Xs = crimes[:,0]
+    Ys = crimes[:,1]
+    times = crimes[:,2]
+
+    distances = np.sqrt(((Xs - location[0]) ** 2) + ((Ys - location[1]) ** 2))
+    close_distances_indexes = np.where(distances <= 500)
+    close_times_indexes = np.where((times >= location[2] - BEFORE_AND_AFTER) & (times <= location[2] + BEFORE_AND_AFTER))
+
+    return np.intersect1d(close_distances_indexes, close_times_indexes)
 
 
 def pick_best_location(possible_locations, crimes):
@@ -58,17 +76,20 @@ def pick_best_location(possible_locations, crimes):
             max_catch_crimes = cur_catch_crimes
             best_location = cur_possible_location
 
+    print("MATCH LOCATIONS")
+    print(max_catch_crimes)
     return best_location
 
 
 def remove_close_crimes(crimes, cur_pick, num_of_days):
-    close_indices = []
+    close_indices = get_indices_of_catches(cur_pick, crimes)
 
-    for crime_index in range(len(crimes)):
-        if is_location_catch_crime(cur_pick, crimes[crime_index]):
-            close_indices += crime_index
+    # for crime_index in range(len(crimes)):
+    #     if is_location_catch_crime(cur_pick, crimes[crime_index]):
+    #         close_indices.append(crime_index)
 
-    return np.delete(crimes, close_indices)
+    after_del = np.delete(crimes, close_indices, axis=0)
+    return after_del
 
 
 def fix_time(cur_pick):
@@ -81,15 +102,19 @@ def fix_time(cur_pick):
     cur_pick[2] = time
     return cur_pick
 
-def get_cars_locations(crimes, num_of_days = 0):
+
+def get_cars_locations(crimes, num_of_days=0):
     possible_locations = get_possible_locations(crimes)
-    cars_places_and_times = []
+    cars_places_and_times = np.empty([0, 3])
 
     for police_car_index in range(POLICE_CARS):
+        print("CUR POLICE")
+        print(crimes.shape)
         cur_pick = pick_best_location(possible_locations, crimes)
         cur_pick = fix_time(cur_pick)
-        cars_places_and_times += cur_pick
+        cars_places_and_times = np.vstack([cars_places_and_times, cur_pick])
         crimes = remove_close_crimes(crimes, cur_pick, num_of_days)
+        print(f"FOUND LOCATION {police_car_index}")
 
     return cars_places_and_times
 
@@ -98,7 +123,70 @@ def verify_legal_time_intervals():
     assert 30 % TIME_INTERVALS == 0 and MINUTES_PER_DAY % TIME_INTERVALS == 0
 
 
+def get_all_train_data():
+    data = pd.read_csv('../train_dataset_crimes.csv')
+    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
+    data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
+    return data[['X Coordinate', 'Y Coordinate', 'Datetime']].to_numpy()
+
+def get_all_train_data_of_weekday(date):
+    data = pd.read_csv('../train_dataset_crimes.csv')
+    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
+    data = data[data["Datetime"].apply(lambda x: x.weekday() == date.weekday())]
+
+    data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
+    return data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
+
+
+def get_data_of_one_date(random_date):
+    data = pd.read_csv('../validation_dataset_crimes.csv')
+    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
+
+    data = data[data["Datetime"].apply(lambda x: x.date() == random_date)]
+
+    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
+    data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
+    return data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
+
+def get_random_date():
+    data = pd.read_csv('../validation_dataset_crimes.csv')
+    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
+    random_date = data.sample().iloc[0]['Datetime'].date()
+
+    return random_date
+
 if __name__ == '__main__':
+    path = "locations.npy"
+    date = get_random_date()
+
+    # crimes = get_all_train_data_of_weekday(date)
+    crimes = get_all_train_data()
     verify_legal_time_intervals()
+    locations = get_cars_locations(crimes)
+    np.save(path, locations)
+
+    locations = np.load(path)
 
 
+    validation_crimes = get_data_of_one_date(date)
+    print(len(validation_crimes))
+
+    catches = np.array([])
+    for location in locations:
+        cur_catches = get_indices_of_catches(location, validation_crimes)
+        catches = np.union1d(catches, cur_catches)
+
+    catches = np.unique(catches)
+    print(catches)
+
+
+    #
+    # x = np.array([1,2,3])
+    # y = np.array([10,2,55])
+    # z1 = np.where(x>2)
+    # z2 = np.where(y>=10)
+    #
+    # print(z1)
+    # print(z2)
+    #
+    # print(np.intersect1d(z1,z2))
