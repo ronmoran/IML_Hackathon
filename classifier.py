@@ -7,7 +7,6 @@ import numpy as np
 
 crimes_dict = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRACTICE', 4: 'ASSAULT'}
 crimes_inv_dict = {v: k for k, v in crimes_dict.items()}
-LOCATION_DESCRIPTION = {}
 LOCATION_DESCRIPTION_COL = "Location Description"
 labels_col = "Primary Type"
 COLS_FOR_FREQ = ["Ward", "Beat", "District", "Community Area"]
@@ -88,12 +87,13 @@ def train_pre_process(X: pd.DataFrame):
 
 
 def train(x: pd.DataFrame, y: pd.DataFrame):
-    clf = CatBoostClassifier(iterations=2000, depth=4,
+    clf = CatBoostClassifier(iterations=400, depth=4,
                              cat_features=['Weekday', 'Hour'],
                              text_features=[LOCATION_DESCRIPTION_COL])
-    # clf = RandomForestClassifier(n_estimators=150, max_depth=11, max_features='auto', ccp_alpha=0.0001)
+    # clf = RandomForestClassifier(n_estimators=1500, max_depth=11,
+    #                              max_features='auto')
     clf.fit(x, y)
-    dump_model(clf, "model.pkl")
+    dump_model(clf, "Q1_model.pkl")
     return clf
 
 
@@ -109,7 +109,7 @@ def load_model(path) -> CatBoostClassifier:
 crimes_dict = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRACTICE', 4: 'ASSAULT'}
 
 def predict(X):
-    cb = load_model("model.pkl")
+    cb = load_model("Q1_model.pkl")
     return cb.predict(pre_processing(X)).apply(lambda x: crimes_dict[x])
 
 def send_police_cars(X):
