@@ -131,7 +131,7 @@ def verify_legal_time_intervals():
 
 
 def get_all_train_data():
-    data = pd.read_csv('train_dataset_crimes.csv')
+    data = pd.read_csv('Dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
     data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
     return data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
@@ -181,7 +181,7 @@ def print_crimes_times(param):
 
 
 def get_test_data():
-    data = pd.read_csv('test_dataset_crimes.csv')
+    data = pd.read_csv('new_test_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
     data = data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna()
     return data
@@ -246,6 +246,6 @@ if __name__ == '__main__':
     # print("ALL CATCHES:")
     # print(catches)
 
-    # train_model(get_all_train_data())
-    answer = send_police_cars("01/14/2021 08:30:00 AM")
-    print(answer)
+    train_model(get_all_train_data())
+    # answer = send_police_cars("01/14/2021 08:30:00 AM")
+    # print(answer)
