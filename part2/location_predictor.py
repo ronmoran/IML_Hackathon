@@ -3,6 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from datetime import datetime
 
 # The maximum distance from police to crime
 MAX_DISTANCE = 500 * 3.28084
@@ -179,51 +180,74 @@ def print_crimes_times(param):
     plt.show()
 
 
-def get_test_data(size):
+def get_test_data():
     data = pd.read_csv('../test_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
-    data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
-    data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
-    data = data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
-    np.random.shuffle(data)
-    return data[:size, :]
+    data = data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna()
+    return data
 
 
 def send_police_cars(date):
-    crimes = get_all_train_data()
+    locations = np.load('Q2_model.npy')
+    new_date = datetime.strptime(date, '%m/%d/%Y %I:%M:%S %p')
+    all_dates = []
+    for i in range(locations.shape[0]):
+        i_hours = np.int64(locations[i, 2] // 60)
+        i_minutes = np.int64(locations[i, 2] % 60)
+        i_date = new_date.replace(hour=i_hours, minute=i_minutes)
+        all_dates.append(i_date.strftime('%m/%d/%Y %I:%M:%S %p'))
+    return [(locations[i, 0], locations[i, 1], all_dates[i])for i in range(locations.shape[0])]
+
+
+def train_model(crimes: np.array):
     verify_legal_time_intervals()
     locations = get_cars_locations(crimes)
-
-    # TODO return proper date in the seconds column
+    np.save('Q2_model', locations)
 
 if __name__ == '__main__':
-    path = "locations.npy"
-    date = get_random_date()
-
-    # crimes = get_all_train_data_of_weekday(date)
-    crimes = get_all_train_data()
-
-    verify_legal_time_intervals()
-    locations = get_cars_locations(crimes)
-
-    # plot_crimes_and_locations(crimes, locations)
-
-    # validation_crimes = get_data_of_one_date(date)
-    # validation_crimes = get_test_data(400)
-    validation_crimes = get_test_data(400)
-    print(validation_crimes)
-    print(len(validation_crimes))
-
-    catches = []
-    for location in locations:
-        print(any((location == x).all() for x in validation_crimes))
-        print("LOCATION:")
-        print(location)
-        cur_catches = get_indices_of_catches(location, validation_crimes)
-        print("CATCHES:")
-        print(cur_catches)
-        catches.append(cur_catches)
+    # path = "locations.npy"
+    # date = get_random_date()
+    #
+    # # crimes = get_all_train_data_of_weekday(date)
+    # crimes = get_all_train_data()
+    #
+    # verify_legal_time_intervals()
+    # locations = get_cars_locations(crimes)
+    # np.save('Q2_model', locations)
+    # locations = np.load('Q2_model.npy')
+    # # print(locations)
+    #
+    #
+    # # plot_crimes_and_locations(crimes, locations)
+    #
+    # # validation_crimes = get_data_of_one_date(date)
+    # # validation_crimes = get_test_data(400)
+    # validation_crimes = get_test_data()
+    # validation_crimes_dates = validation_crimes['Datetime'].map(pd.Timestamp.date).unique()
+    # # validation_crimes = get_all_train_data()
+    # print(validation_crimes)
+    # print(len(validation_crimes))
+    #
+    # total_hits = 0
+    # for date in validation_crimes_dates:
+    #     all_dates = validation_crimes['Datetime'].map(pd.Timestamp.date)
+    #     temp = validation_crimes.loc[all_dates == date, :]
+    #     temp['Datetime'] = temp['Datetime'].dt.hour * 60 + temp['Datetime'].dt.minute
+    #     temp = temp.to_numpy()
+    #     for location in locations:
+    #         print("LOCATION:")
+    #         print(location)
+    #         cur_catches = get_indices_of_catches(location, temp)
+    #         total_hits += len(cur_catches)
+    #         print("CATCHES:")
+    #         print(cur_catches)
+    #
+    # print("avg hits per day : ", total_hits / len(validation_crimes_dates))
 
     # catches = np.unique(catches)
-    print("ALL CATCHES:")
-    print(catches)
+    # print("ALL CATCHES:")
+    # print(catches)
+
+    # train_model(get_all_train_data())
+    answer = send_police_cars("01/14/2021 08:30:00 AM")
+    print(answer)
