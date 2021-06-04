@@ -110,7 +110,8 @@ crimes_dict = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRA
 
 def predict(X):
     cb = load_model("Q1_model.pkl")
-    return cb.predict(pre_processing(X)).apply(lambda x: crimes_dict[x])
+    X_df = pd.read_csv(X)
+    return cb.predict(pre_processing(X_df)).apply(lambda x: crimes_dict[x])
 
 def send_police_cars(X):
     locations = np.load('Q2_model.npy')
