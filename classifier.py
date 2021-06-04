@@ -106,13 +106,12 @@ def load_model(path) -> CatBoostClassifier:
     with open(path, 'rb') as f:
         return pickle.load(f)
 
-crimes_dict = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRACTICE', 4: 'ASSAULT'}
 
 def predict(X):
     cb = load_model("Q1_model.pkl")
     X_df = pd.read_csv(X)
-    return cb.predict(pre_processing(X_df)).apply(lambda x: crimes_dict[x])
-
+    prediction = cb.predict(pre_processing(X_df)).flatten()
+    return [crimes_dict[ind] for ind in prediction]
 def send_police_cars(X):
     locations = np.load('Q2_model.npy')
     new_date = datetime.strptime(X, '%m/%d/%Y %I:%M:%S %p')
