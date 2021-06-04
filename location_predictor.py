@@ -215,7 +215,6 @@ if __name__ == '__main__':
     # locations = get_cars_locations(crimes)
     # np.save('Q2_model', locations)
     # locations = np.load('Q2_model.npy')
-    # # print(locations)
     #
     #
     # # plot_crimes_and_locations(crimes, locations)
@@ -225,8 +224,7 @@ if __name__ == '__main__':
     # validation_crimes = get_test_data()
     # validation_crimes_dates = validation_crimes['Datetime'].map(pd.Timestamp.date).unique()
     # # validation_crimes = get_all_train_data()
-    # print(validation_crimes)
-    # print(len(validation_crimes))
+
     #
     # total_hits = 0
     # for date in validation_crimes_dates:
