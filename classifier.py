@@ -13,7 +13,6 @@ COLS_FOR_FREQ = ["Ward", "Beat", "District", "Community Area"]
 
 
 def pre_processing(X: pd.DataFrame):
-
     processed_data = X[['Date', 'Arrest', 'Domestic', 'X Coordinate',
                         'Y Coordinate', 'Updated On', "Beat", "District",
                         "Ward", "Community Area",
@@ -52,7 +51,7 @@ def pre_processing(X: pd.DataFrame):
     return processed_data
 
 
-def get_col_freq(col: str, labels_col:str, data: pd.DataFrame) -> pd.DataFrame:
+def get_col_freq(col: str, labels_col: str, data: pd.DataFrame) -> pd.DataFrame:
     freq = pd.crosstab(data[col], data[labels_col])
     freq = freq.div(freq.sum(axis=1), axis=0)
     freq.rename(columns={label_name: f"{col}_{label_name}" for label_name in
@@ -60,7 +59,7 @@ def get_col_freq(col: str, labels_col:str, data: pd.DataFrame) -> pd.DataFrame:
     return freq
 
 
-def get_word_freq(col: pd.Series, labels:pd.Series) -> pd.DataFrame:
+def get_word_freq(col: pd.Series, labels: pd.Series) -> pd.DataFrame:
     words = col.str.findall("[A-Za-z0-9]+")
     cols = [f"{LOCATION_DESCRIPTION_COL}_{label}" for label
             in labels.unique()]
@@ -112,14 +111,18 @@ def predict(X):
     X_df = pd.read_csv(X)
     prediction = cb.predict(pre_processing(X_df)).flatten()
     return [crimes_dict[ind] for ind in prediction]
+
+
 def send_police_cars(X):
     locations = np.load('Q2_model.npy')
-    new_date = datetime.strptime(X, '%m/%d/%Y %I:%M:%S %p')
-    all_dates = []
-    for i in range(locations.shape[0]):
-        i_hours = np.int64(locations[i, 2] // 60)
-        i_minutes = np.int64(locations[i, 2] % 60)
-        i_date = new_date.replace(hour=i_hours, minute=i_minutes)
-        all_dates.append(i_date.strftime('%m/%d/%Y %I:%M:%S %p'))
-    return [(locations[i, 0], locations[i, 1], all_dates[i]) for i in range(locations.shape[0])]
-
+    res = []
+    for date in X:
+        new_date = datetime.strptime(date, '%m/%d/%Y %I:%M:%S %p')
+        all_dates = []
+        for i in range(locations.shape[0]):
+            i_hours = np.int64(locations[i, 2] // 60)
+            i_minutes = np.int64(locations[i, 2] % 60)
+            i_date = new_date.replace(hour=i_hours, minute=i_minutes)
+            all_dates.append(i_date.strftime('%m/%d/%Y %I:%M:%S %p'))
+        res.append([(locations[i, 0], locations[i, 1], all_dates[i]) for i in range(locations.shape[0])])
+    return res
