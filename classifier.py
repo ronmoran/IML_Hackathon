@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
 
 crimes_dict = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRACTICE', 4: 'ASSAULT'}
-crimes_inv_dict = {v: k for k, v in crimes_dict.items()}  # todo return crimes and not label
+crimes_inv_dict = {v: k for k, v in crimes_dict.items()}
 LOCATION_DESCRIPTION = {}
 LOCATION_DESCRIPTION_COL = "Location Description"
 labels_col = "Primary Type"
@@ -23,7 +23,7 @@ def pre_processing(X: pd.DataFrame):
     processed_data['Time diff'] = processed_data['Updated On'] - processed_data['Date']
     # processed_data[LOCATION_DESCRIPTION_COL] = processed_data[
     #     LOCATION_DESCRIPTION_COL].apply(lambda x: LOCATION_DESCRIPTION.get(
-    #     x, -1))  # todo why -1? what to do with newly found data
+    #     x, -1))
     processed_data['Time diff'] = processed_data['Time diff'].apply(lambda x: x.total_seconds())
     processed_data['Hour'] = processed_data['Date'].apply(lambda x: x.time().hour)
     processed_data['Weekday'] = processed_data['Date'].apply(lambda x: x.date().weekday())
