@@ -131,14 +131,14 @@ def verify_legal_time_intervals():
 
 
 def get_all_train_data():
-    data = pd.read_csv('../train_dataset_crimes.csv')
+    data = pd.read_csv('train_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
     data['Datetime'] = data['Datetime'].dt.hour * 60 + data['Datetime'].dt.minute
     return data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna().to_numpy()
 
 
 def get_all_train_data_of_weekday(date):
-    data = pd.read_csv('../train_dataset_crimes.csv')
+    data = pd.read_csv('train_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
     data = data[data["Datetime"].apply(lambda x: x.weekday() == date.weekday())]
 
@@ -147,7 +147,7 @@ def get_all_train_data_of_weekday(date):
 
 
 def get_data_of_one_date(random_date):
-    data = pd.read_csv('../validation_dataset_crimes.csv')
+    data = pd.read_csv('validation_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
 
     data = data[data["Datetime"].apply(lambda x: x.date() == random_date)]
@@ -158,7 +158,7 @@ def get_data_of_one_date(random_date):
 
 
 def get_random_date():
-    data = pd.read_csv('../validation_dataset_crimes.csv')
+    data = pd.read_csv('validation_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
     random_date = data.sample().iloc[0]['Datetime'].date()
 
@@ -181,7 +181,7 @@ def print_crimes_times(param):
 
 
 def get_test_data():
-    data = pd.read_csv('../test_dataset_crimes.csv')
+    data = pd.read_csv('test_dataset_crimes.csv')
     data['Datetime'] = pd.to_datetime(data['Date'], format='%m/%d/%Y %I:%M:%S %p')
     data = data[['X Coordinate', 'Y Coordinate', 'Datetime']].dropna()
     return data

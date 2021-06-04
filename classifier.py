@@ -2,6 +2,8 @@ import pandas as pd
 import pickle
 from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
+from datetime import datetime
+import numpy as np
 
 crimes_dict = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRACTICE', 4: 'ASSAULT'}
 crimes_inv_dict = {v: k for k, v in crimes_dict.items()}
@@ -111,5 +113,13 @@ def predict(X):
     return cb.predict(pre_processing(X)).apply(lambda x: crimes_dict[x])
 
 def send_police_cars(X):
-    pass
+    locations = np.load('Q2_model.npy')
+    new_date = datetime.strptime(X, '%m/%d/%Y %I:%M:%S %p')
+    all_dates = []
+    for i in range(locations.shape[0]):
+        i_hours = np.int64(locations[i, 2] // 60)
+        i_minutes = np.int64(locations[i, 2] % 60)
+        i_date = new_date.replace(hour=i_hours, minute=i_minutes)
+        all_dates.append(i_date.strftime('%m/%d/%Y %I:%M:%S %p'))
+    return [(locations[i, 0], locations[i, 1], all_dates[i]) for i in range(locations.shape[0])]
 
